@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Nexus</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+</head>
+<body>
+
+    <div id="wrapper">
+
+        <header>
+            <nav id="navbar">
+                <ul>
+                    <li><a class="navItem hc" target="#section1">Home</a></li>
+                    <li><a class="navItem hc" target="#section2">Specs</a></li>
+                    <li><a class="navItem hc" target="#section3">Gallery</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <section id="section1">
+            <main id="title">
+                <p>
+                    Google Nexus 15.
+                </p>
+            </main>
+            <main id="subtitle">
+                <p>
+                    Designed for work, play, and you.
+                </p>
+            </main>
+        </section>
+
+
+
+        <section id="section2">
+            <main>
+                <p>
+                    Watch the video.
+                </p>
+            </main>
+            <div  id="video">
+                <video id="nexusVideo" width="400" height="300" controls poster="css/images/nexus.png">
+                    <source src="css/videos/nexus.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+
+            <p class="icon">
+                <i class="fa fa-cogs fa-2x"></i>
+            </p>
+
+            <button id="techSpecs" type="button">Technical Specifications</button>
+
+            <div id="modal">
+                <div id="close"> <a><p id="closeIcon">X</p></a></div>
+                <ul style="list-style-type:disc">
+                    <li>Qualcomm Snapdragon 4.5 GHz</li>
+                    <li>AMOLED capacitive touchscreen</li>
+                    <li>32/64 GB, 3 GB RAM</li>
+                    <li>Wi-Fi 802.11 a/b/g/n/ac</li>
+                    <li>Accelerometer, gyro, proximity</li>
+                    <li>Non-removable Li-Po</li>
+                    <li>Samsung DDR4</li>
+                    <li>LTE CAT version 4</li>
+                    <li>13 MP, 4128 x 3096 pixels</li>
+                </ul>
+            </div>
+
+        </section>
+
+
+        <section id="section3">
+            <main>
+                <p>
+                    Scroll through the snapshots.
+                </p>
+            </main>
+
+            <div id="carousel-container">
+                <ul id="carousel">
+                    <li>
+                        <img src="css/images/car1.jpg"/>
+                    </li>
+                    <li>
+                        <img src="css/images/car2.jpg"/>
+                    </li>
+                    <li>
+                        <img src="css/images/car3.jpg"/>
+                    </li>
+                    <li>
+                        <img src="css/images/car4.png"/>
+                    </li>
+                    <li>
+                        <img src="css/images/car5.jpg"/>
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div>
+                <a href="javascript:void(0)" class="prev">Prev</a>
+                <a href="javascript:void(0)" class="next">Next</a>
+            </div>
+
+            <div id="multiColumn">
+                <article style="float:left">
+                    <p>
+                        Google Nexus is a supersized version of the new Moto X
+                        that has been given a two-handed booster shot and appropriately
+                        received a post-surgery Lollipop. It's among the best phones in 2015.
+                        This phablet-sized smartphone is the first to run Android 5.0 Lollipop and,
+                        really, there's no better way to experience all of the changes Google has made
+                        to its operating system.
+                    </p>
+                </article>
+
+                <article style="float:right">
+                    <p>
+                        As the first plus-size smartphone from Google, the Nexus isn't a simple upgrade.
+                        And when Dave Burke, the company's VP of engineering, first handed us the 6-inch handset,
+                        he encouraged us to ask not, "What is the right size for a phone?" but, "What is the
+                        right size of a pocket Internet device?"
+                    </p>
+                </article>
+
+                <article style="margin: auto">
+                    <p>
+                        The company just launched the Nexus, a 6-inch phone made in collaboration Motorola that
+                        comes with a winning feature list and is just as glorious as the Moto X it shares a likeness
+                        with. Aside from being a strong handset in its own right, it's meant to be a blueprint to
+                        inspire Google's partners as they work on their own devices.
+                    </p>
+                </article>
+            </div>
+
+        </section>
+
+        <footer id="socialMediaWrapper">
+            <div class="socialMedia" id="facebook">
+            </div>
+            <div class="socialMedia" id="twitter">
+            </div>
+            <div class="socialMedia" id="linkedin">
+            </div>
+        </footer>
+
+    </div>
+
+  <!-- All scripting files go here -->
+  <script src="lib/jquery-2.1.3.min/index.js"></script>
+    <script src="js/script.js"></script>
+  <script src="http://localhost:35729/livereload.js"></script>
+</body>
+</html>
