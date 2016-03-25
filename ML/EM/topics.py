@@ -20,9 +20,7 @@ numWords = None
 def readFile():
     global wordProb, numDocs, vocabLen, numWords
     with open('docword.nips.txt') as f:
-    #with open('test.txt') as f:
         numDocs = int(f.readline().rstrip('\n'))
-        #numDocs = 50 # temp-overwrite
         vocabLen = int(f.readline().rstrip('\n')) 
         numWords = int(f.readline().rstrip('\n'))
         wordProb = np.zeros((numTopics, vocabLen))        
