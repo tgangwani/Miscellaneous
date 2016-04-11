@@ -1,3 +1,4 @@
+//http://blog.albertarmea.com/post/47089939939/using-pthreadbarrier-on-mac-os-x
 #ifdef __APPLE__
 
 #ifndef PTHREAD_BARRIER_H_
