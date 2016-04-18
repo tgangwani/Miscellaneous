@@ -1,5 +1,6 @@
 #include<iostream>
 #include<list>
+#include<vector>
 #include"boost/program_options.hpp"
 #include<pthread.h>
 #include"pq.h"
@@ -56,13 +57,20 @@ void* th_fn(void *arg) {
   pq<T> *ptr = m_arg->q_ptr;
   uint32_t thread_id = m_arg->tid;
 
-  for(uint32_t k=0; k<10; k++) {
+  // wait for all threads to reach this point
+  pthread_barrier_wait(&barr);
+  std::list<T> enq_removals, deq_removals;  // data items removed from queue during enqueue/deleteMin
+  std::list<T> enq_adds;
+
+  for(uint32_t k=0; k<10000; k++) {
     // dummy : each thread enqueues nodes with some values
     T data = (T)(thread_id*k+1);
-
-    ptr->enqueue(data);
+    ptr->enqueue(data, thread_id, enq_removals, enq_adds);
+    ptr->deleteMin(thread_id, deq_removals);
   }
 
+  //BOOST_LOG_TRIVIAL(debug) << "[end] " << enq_removals.size() + deq_removals.size() << "\n"; 
+  //BOOST_LOG_TRIVIAL(debug) << enq_adds.size();
   return 0;
 }
 
@@ -72,10 +80,11 @@ int main(int argc, char **argv) {
  
   assert(numThreads > 0);
   std::list<pthread_t> pthreads(numThreads-1); 
+  std::vector<m_pthread_arg<pq_element_t> > args_list(numThreads-1); 
 
   // init the priority queue
   pq<pq_element_t> Q;
-
+                     
   // init the pthread barrier
   if(pthread_barrier_init(&barr, NULL, numThreads)){
     std::cout<<"Could not initialize pthread barrier\n";
@@ -83,12 +92,12 @@ int main(int argc, char **argv) {
   }
   
   // spawn numThreads-1 new threads
-  uint32_t t = 0;
+  uint32_t t = 1;
   for(auto &m:pthreads){
-    m_pthread_arg<pq_element_t> args;
-    args.q_ptr = &Q;
-    args.tid = ++t;
-    pthread_create(&m, NULL, &th_fn<pq_element_t>, (void*)(&args));
+    args_list[t-1].q_ptr = &Q;
+    args_list[t-1].tid = t;
+    pthread_create(&m, NULL, &th_fn<pq_element_t>, (void*)(&(args_list[t-1])));
+    ++t;
   }
 
   // assign work to thread-0

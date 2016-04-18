@@ -1,6 +1,7 @@
 // implements the priority queue
 #include<atomic>
 #include<assert.h>
+#include"boost/log/trivial.hpp"
 
 //#define DEBUG 
 #define ONE static_cast<uintptr_t>(1) 
@@ -46,30 +47,31 @@ class pq {
     }
 
     // function to add to the priority queue
-    void enqueue(T& data) {
+    void enqueue(T& data, const uint32_t& thread_id, std::list<T>& enq_removals, std::list<T>& enq_adds) {
 
-      // create new node
+      // create new node. Assert that the msb is zero. We'll use this for
+      // logical deletion
       node<T> *new_node = new node<T>(data);
+      CHECK_MSB(new_node);
       
       #ifdef DEBUG
         std::cout<<"New data node created at address "<<new_node<< " with data " << data<<"\n";
       #endif
       
-      // assert that the msb is zero. We'll use this for logical deletion
-      CHECK_MSB(new_node);
-      auto prev = &head;
       node<T> *curr, *next;
-      int d; // takes value from the set {0,1}; 1 = logically deleted node
+      bool d; // logically deleted node
   
       start:
         curr = head.load(std::memory_order_relaxed);    // load the head
+        auto prev = &head;
 
       while(true){
         if(curr == sentinel) break;  // we have reached the end of the priority queue 
 
         // get the <next, d> pair from curr->next
-        d = (RC(curr->next) & ONE_MSB) > 0 ? 1 : 0;  // check if the msb (logical deletion bit) is set
-        next = reinterpret_cast<node<T> *> ((RC(curr->next) << ONE) >> ONE);  // remove the msb to fetch next pointer from curr->next
+        next = curr->next;
+        d = (RC(next) & ONE_MSB) >> 63;  //  check if the msb (logical deletion bit) is set
+        next = reinterpret_cast<node<T> *> ((RC(next) << ONE) >> ONE);  // remove the msb to fetch next pointer from curr->next
         
         if(d) {
 
@@ -79,8 +81,10 @@ class pq {
             
           // if the logical bit is set, try to physically remove this node from
           // the priority queue using CAS
-          node<T> *expected = reinterpret_cast<node<T> *> ((RC(curr) << ONE) >> ONE);
-          if(!atomic_compare_exchange_weak_explicit(prev, &expected, next, std::memory_order_release, std::memory_order_relaxed)) {
+          if(atomic_compare_exchange_weak_explicit(prev, &curr, next, std::memory_order_release, std::memory_order_relaxed)) {
+            enq_removals.push_back(curr->data);
+          }
+          else {
             goto start;
           }
 
@@ -105,10 +109,12 @@ class pq {
       new_node->next = curr;
       
       // found correct position. Now use CAS to insert the node
-      node<T> *expected = reinterpret_cast<node<T> *> ((RC(curr) << ONE) >> ONE);
       // insert node between prev and curr
-      if(!atomic_compare_exchange_weak_explicit(prev, &expected, new_node, std::memory_order_release, std::memory_order_relaxed)) {
+      if(!atomic_compare_exchange_weak_explicit(prev, &curr, new_node, std::memory_order_release, std::memory_order_relaxed)) {
         goto start;
+      }
+      else {
+        enq_adds.push_back(new_node->data);
       }
 
       #ifdef DEBUG
@@ -116,8 +122,66 @@ class pq {
       #endif
     }
 
-    void dequeue() {}
-    
+    // function to remove the top of the priority queue
+    void deleteMin(const uint32_t& thread_id, std::list<T>& deq_removals) {
+      
+      while(true) {
+        node<T> *first = head.load(std::memory_order_relaxed);    // load the head
+
+        if(first == sentinel) {
+          // no elements in the priority queue
+          break;
+        }
+
+        if(tryRemove(first, deq_removals, thread_id)) {
+          break;
+        } 
+
+      }  // while
+
+    }
+
+    // function return true if the thread could logically remove a node 
+    bool tryRemove(node<T> *first, std::list<T>& deq_removals, const uint32_t& thread_id) {
+
+      // get the <next, d> pair from first->next
+      node<T> *next = first->next;
+      bool d = (RC(next) & ONE_MSB) >> 63;  
+      next = reinterpret_cast<node<T> *> ((RC(next) << ONE) >> ONE);
+  
+      // is first already logically deleted?
+      if(d) {
+
+        #ifdef DEBUG
+          std::cout<<"First already logically deleted\n";
+        #endif
+
+        // try to physically remove this node using CAS
+        if(atomic_compare_exchange_weak_explicit(&head, &first, next, std::memory_order_release, std::memory_order_relaxed)) {
+          deq_removals.push_back(first->data);
+        }
+         
+        return false;
+      }
+
+      // logically delete first
+      node<T> *updated_next =  reinterpret_cast<node<T> *> (RC(next) | ONE_MSB);
+      auto n = reinterpret_cast<std::atomic<node<T>*>*> (&first->next);
+
+      if(!atomic_compare_exchange_weak_explicit(n, &next, updated_next, std::memory_order_release, std::memory_order_relaxed)) {
+        // logical deletion failure
+        return false;
+      }
+      
+      // try physical removal
+      if(atomic_compare_exchange_weak_explicit(&head, &first, next, std::memory_order_release, std::memory_order_relaxed)) {
+        deq_removals.push_back(first->data);
+      }
+ 
+      // logical deletion success
+      return true;
+    }
+  
     // prints the priority queue in order
     void print() {
       node<T> *it = head;
