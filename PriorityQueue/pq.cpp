@@ -4,6 +4,7 @@
 #include"boost/program_options.hpp"
 #include"pq.h"
 #include"barrier.h"
+#include"m5op.h"
 
 // when enabled, the program stores the 'data' that was added or removed at
 // each enqueue() and deleteMin() call. This data can be used to implement
@@ -130,6 +131,9 @@ int main(int argc, char **argv) {
     exit(1);
   }
   
+  // simulation marker (roi-begin)
+  m5_work_begin(0, 0);
+
   // spawn numThreads-1 new threads
   uint32_t t = 1;
   for(auto &m:pthreads){
@@ -150,8 +154,12 @@ int main(int argc, char **argv) {
   }
 
   // prints the priority queue
-  Q.print();
+  //Q.print();
   print_stats();
+  
+  // simulation marker (roi-end)
+  m5_work_end(0, 0);
+
 
   pthread_barrier_destroy(&barr);
   std::cout<<"Application complete"<<"\n";
